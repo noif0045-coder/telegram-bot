@@ -1,0 +1,47 @@
+import requests
+from aiogram import Bot, Dispatcher, types, executor
+
+TOKEN = "حط_توكنك"
+ADMIN_ID = 123456789
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
+
+vip_users = set()
+
+@dp.message_handler(commands=['start'])
+async def start(msg: types.Message):
+    await msg.reply("🔥 ارسل رابط (تيك توك / انستا)\n💎 VIP تلقائي بعد الدفع /vip")
+
+@dp.message_handler(commands=['vip'])
+async def vip(msg: types.Message):
+    await msg.reply("💳 للاشتراك VIP اضغط:\nhttps://your-payment-link.com")
+
+@dp.message_handler(commands=['addvip'])
+async def addvip(msg: types.Message):
+    if msg.from_user.id == ADMIN_ID:
+        user_id = int(msg.get_args())
+        vip_users.add(user_id)
+        await msg.reply("تم التفعيل")
+
+@dp.message_handler()
+async def download(msg: types.Message):
+    url = msg.text
+
+    if msg.from_user.id not in vip_users:
+        await msg.reply("❌ لازم VIP /vip")
+        return
+
+    if "tiktok.com" in url:
+        try:
+            api = f"https://tikwm.com/api/?url={url}"
+            res = requests.get(api).json()
+            await msg.reply_video(res['data']['play'])
+        except:
+            await msg.reply("خطأ")
+
+    elif "instagram.com" in url:
+        await msg.reply("⬇️\nhttps://api.vevioz.com/api/button/video?url=" + url)
+
+if __name__ == "__main__":
+    executor.start_polling(dp)
